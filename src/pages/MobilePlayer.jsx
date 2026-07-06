@@ -43,7 +43,7 @@ export default function MobilePlayer() {
     const loadCard = async () => {
       try {
         const data = await getCard(gameId, cardId);
-        setCard(data);
+        setCard(data.card);
       } catch (err) {
         setError(err.message || 'Error al cargar el cartón');
       } finally {
