@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { fetchPlaylist } from './services/api';
 import { generateUniqueCards } from './utils/bingo';
+import BingoCard from './components/BingoCard';
+import HostPanel from './components/HostPanel';
+import { themes } from './utils/themes';
 
 export default function App() {
   const [step, setStep] = useState('PLAYLIST');
@@ -14,6 +17,9 @@ export default function App() {
   
   const [gridSize, setGridSize] = useState(16);
   const [numCards, setNumCards] = useState(10);
+
+  const [themeId, setThemeId] = useState('retro-80s');
+  const [ecoInk, setEcoInk] = useState(false);
 
   const handleFetchPlaylist = async (e) => {
     e.preventDefault();
@@ -166,51 +172,90 @@ export default function App() {
         {/* STEP 3: PREVIEW */}
         {step === 'PREVIEW' && (
           <div className="space-y-6">
-            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-cyan-400">Paso 3: Resultado (Vista Previa)</h2>
-                <button
-                    type="button"
-                    onClick={() => setStep('CONFIG')}
-                    className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
+            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl no-print">
+               <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-slate-700 pb-4">
+                <h2 className="text-2xl font-semibold text-cyan-400">Paso 3: Cartones Listos</h2>
+                
+                <div className="flex flex-wrap gap-2 items-center">
+                  <button
+                      type="button"
+                      onClick={() => setStep('CONFIG')}
+                      className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      Volver
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="text-sm bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                   >
-                    Volver a Configurar
-                </button>
-              </div>
-
-              <div className="bg-slate-900 p-5 rounded-xl mb-6 flex justify-around items-center border border-slate-700/50">
-                <div className="text-center">
-                  <p className="text-slate-400 text-sm mb-1">Total Generados</p>
-                  <strong className="text-white text-3xl font-bold">{cards.length}</strong>
-                </div>
-                <div className="h-10 w-px bg-slate-700"></div>
-                <div className="text-center">
-                  <p className="text-slate-400 text-sm mb-1">Formato Elegido</p>
-                  <strong className="text-white text-3xl font-bold text-pink-400">{gridSize === 9 ? '3x3' : '4x4'}</strong>
+                    🖨️ Imprimir
+                  </button>
+                  <button
+                    onClick={() => setStep('HOST')}
+                    className="text-sm bg-gradient-to-r from-pink-500 to-cyan-400 hover:opacity-90 text-white font-bold px-6 py-2 rounded-lg transition-opacity flex items-center gap-2 shadow-lg shadow-cyan-500/20"
+                  >
+                    🎉 Iniciar Panel
+                  </button>
                 </div>
               </div>
 
-              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                {cards.map((card) => (
-                  <div key={card.id} className="border border-slate-700 p-5 rounded-xl bg-slate-900/50 hover:bg-slate-900 transition-colors">
-                    <h3 className="font-bold text-cyan-400 mb-3 border-b border-slate-800 pb-2">{card.id}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {card.tracks.map((track, i) => (
-                        <span key={i} className="text-xs bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-full shadow-sm">
-                          {track.title}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="mb-8 p-4 bg-slate-900 rounded-xl border border-slate-700">
+                <h3 className="text-sm font-bold text-slate-300 mb-3 uppercase tracking-wider">Diseño Visual</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.values(themes).map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setThemeId(t.id)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        themeId === t.id 
+                        ? 'bg-cyan-500 text-slate-900 shadow-[0_0_10px_rgba(34,211,238,0.5)]' 
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-600'
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
 
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setEcoInk(!ecoInk)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${ecoInk ? 'bg-green-400' : 'bg-slate-600'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${ecoInk ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                  <span className="text-sm font-medium text-slate-300">
+                    Modo Eco-Ink (Ahorro de Tinta)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="print-grid max-w-full">
+              {cards.map((card) => (
+                <BingoCard 
+                  key={card.id} 
+                  card={card} 
+                  gridSize={gridSize} 
+                  themeId={themeId} 
+                  ecoInk={ecoInk} 
+                />
+              ))}
             </div>
           </div>
         )}
 
+        {/* STEP 4: HOST PANEL */}
+        {step === 'HOST' && (
+          <HostPanel 
+            allTracks={playlistData.tracks} 
+            cards={cards} 
+            onExit={() => setStep('PREVIEW')} 
+          />
+        )}
+
         {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-xl">
+          <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-xl no-print">
             {error}
           </div>
         )}
