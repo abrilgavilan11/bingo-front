@@ -70,7 +70,7 @@ export default function MobilePlayer() {
       }
     });
 
-    socket.on('new-song', (track) => {
+    socket.on('next-song', (track) => {
       checkTrackMatch(track, false);
     });
 
