@@ -1,131 +1,290 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { io } from 'socket.io-client';
+import confetti from 'canvas-confetti';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getCard } from '../services/api';
+
+const WINNING_LINES = {
+  9: [
+    [0,1,2], [3,4,5], [6,7,8], 
+    [0,3,6], [1,4,7], [2,5,8], 
+    [0,4,8], [2,4,6]           
+  ],
+  16: [
+    [0,1,2,3], [4,5,6,7], [8,9,10,11], [12,13,14,15],
+    [0,4,8,12], [1,5,9,13], [2,6,10,14], [3,7,11,15],
+    [0,5,10,15], [3,6,9,12]                           
+  ]
+};
 
 export default function MobilePlayer() {
   const { gameId, cardId } = useParams();
   const [card, setCard] = useState(null);
-  const [gridSize, setGridSize] = useState(16);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  
   const [markedTracks, setMarkedTracks] = useState(new Set());
+  const [toastMessage, setToastMessage] = useState(null);
+  const [wonLines, setWonLines] = useState(new Set());
+  const [hasBingo, setHasBingo] = useState(false);
+  
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    const fetchCardData = async () => {
+    const savedName = localStorage.getItem(`bingo-name-${gameId}`);
+    if (savedName) setPlayerName(savedName);
+  }, [gameId]);
+
+  useEffect(() => {
+    if (!playerName) return;
+
+    const loadCard = async () => {
       try {
         const data = await getCard(gameId, cardId);
-        setCard(data.card);
-        setGridSize(data.gridSize);
+        setCard(data);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Error al cargar el cartón');
       } finally {
         setLoading(false);
       }
     };
-    fetchCardData();
-  }, [gameId, cardId]);
+    loadCard();
+  }, [gameId, cardId, playerName]);
 
-  const toggleMark = (trackId) => {
-    const newMarked = new Set(markedTracks);
-    if (newMarked.has(trackId)) {
-      newMarked.delete(trackId);
-    } else {
-      newMarked.add(trackId);
+  useEffect(() => {
+    if (!playerName || !card) return;
+
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001');
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      socket.emit('join-room', gameId);
+    });
+
+    socket.on('sync-state', (state) => {
+      if (state.playedTracks && state.playedTracks.length > 0) {
+        const lastTrack = state.playedTracks[0];
+        checkTrackMatch(lastTrack, true);
+      }
+    });
+
+    socket.on('new-song', (track) => {
+      checkTrackMatch(track, false);
+    });
+
+    return () => socket.disconnect();
+  }, [gameId, cardId, playerName, card]);
+
+  const checkTrackMatch = (track, isSync) => {
+    if (!card) return;
+    
+    const trackIndex = card.tracks.findIndex(t => t.id === track.id);
+    if (trackIndex !== -1) {
+      setMarkedTracks(prev => {
+        const newSet = new Set(prev);
+        newSet.add(trackIndex);
+        return newSet;
+      });
+      
+      if (!isSync) {
+        showToast(`¡Tenes "${track.title}"! 🔥`);
+        if (navigator.vibrate) navigator.vibrate(200);
+      }
     }
-    setMarkedTracks(newMarked);
   };
 
-  if (loading) {
+  useEffect(() => {
+    if (!card || markedTracks.size === 0) return;
+
+    const size = card.tracks.length;
+    const lines = WINNING_LINES[size];
+    
+    let isFullCard = true;
+    for (let i = 0; i < size; i++) {
+      if (!markedTracks.has(i)) {
+        isFullCard = false;
+        break;
+      }
+    }
+
+    if (isFullCard && !hasBingo) {
+      setHasBingo(true);
+      showToast('¡BINGO! 🎉');
+      confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
+      if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+      
+      socketRef.current.emit('winner', {
+        gameId,
+        cardId,
+        playerName,
+        type: 'BINGO'
+      });
+      return; 
+    }
+
+    if (hasBingo) return;
+
+    const currentWonLines = new Set(wonLines);
+    let newWin = false;
+
+    lines.forEach((line, index) => {
+      if (!currentWonLines.has(index)) {
+        const isLineComplete = line.every(idx => markedTracks.has(idx));
+        if (isLineComplete) {
+          currentWonLines.add(index);
+          newWin = true;
+        }
+      }
+    });
+
+    if (newWin) {
+      setWonLines(currentWonLines);
+      showToast('¡LÍNEA! 🚀');
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      
+      const lineType = getLineType(Array.from(currentWonLines)[currentWonLines.size - 1], size);
+      socketRef.current.emit('winner', {
+        gameId,
+        cardId,
+        playerName,
+        type: 'LINE',
+        lineType
+      });
+    }
+  }, [markedTracks, card, hasBingo, wonLines, gameId, cardId, playerName]);
+
+  const getLineType = (index, size) => {
+    const is4x4 = size === 16;
+    if (is4x4) {
+      if (index < 4) return 'Horizontal';
+      if (index < 8) return 'Vertical';
+      return 'Diagonal';
+    } else {
+      if (index < 3) return 'Horizontal';
+      if (index < 6) return 'Vertical';
+      return 'Diagonal';
+    }
+  };
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleNameSubmit = (e) => {
+    e.preventDefault();
+    const name = e.target.playerName.value.trim();
+    if (name) {
+      localStorage.setItem(`bingo-name-${gameId}`, name);
+      setPlayerName(name);
+    }
+  };
+
+  if (!playerName) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-cyan-400 font-bold text-xl">
-        Cargando tu cartón...
+      <div className="p-4 flex items-center justify-center text-slate-800 dark:text-white mt-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md"
+        >
+          <h2 className="text-2xl font-black mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-cyan-500">
+            ¿Cómo te llamás?
+          </h2>
+          <form onSubmit={handleNameSubmit} className="space-y-6">
+            <input 
+              type="text" 
+              name="playerName" 
+              placeholder="Tu nombre o apodo" 
+              required
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 text-lg font-bold text-center shadow-inner"
+            />
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit" 
+              className="w-full bg-gradient-to-r from-pink-500 to-cyan-500 text-white font-black py-4 rounded-xl shadow-[0_4px_14px_0_rgba(236,72,153,0.39)] uppercase tracking-wider"
+            >
+              Entrar al Juego
+            </motion.button>
+          </form>
+        </motion.div>
       </div>
     );
   }
 
-  if (error || !card) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-        <div className="bg-red-900/50 border border-red-500 text-red-200 p-6 rounded-2xl max-w-sm text-center">
-          <h1 className="text-2xl font-bold mb-2">Oops!</h1>
-          <p>{error || 'Cartón no encontrado'}</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center mt-20 text-slate-500 font-bold animate-pulse">Cargando cartón...</div>;
+  if (error) return <div className="text-center mt-20 text-red-500 font-bold bg-red-100 p-4 mx-4 rounded-xl">{error}</div>;
+  if (!card) return <div className="text-center mt-20">Cartón no encontrado.</div>;
 
-  const is4x4 = gridSize === 16;
+  const is4x4 = card.tracks.length === 16;
   const colsClass = is4x4 ? 'grid-cols-4' : 'grid-cols-3';
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4 font-sans flex flex-col items-center">
-      <div className="w-full max-w-md">
-        
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-cyan-400 uppercase tracking-wider">
-            Bingo Musical
-          </h1>
-          <div className="inline-block mt-2 bg-slate-800 border border-slate-700 text-cyan-300 px-4 py-1 rounded-full text-sm font-bold shadow-lg shadow-cyan-500/20">
-            {card.id}
-          </div>
+    <div className="max-w-md mx-auto p-4 sm:p-6 pb-20 text-slate-800 dark:text-white">
+      <div className="mb-6 flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jugador</p>
+          <p className="font-black text-slate-900 dark:text-white text-lg">{playerName}</p>
         </div>
-
-        {/* Interactive Grid */}
-        <div className={`grid ${colsClass} gap-2 mb-8`}>
-          {card.tracks.map((track, idx) => {
-            const isMarked = markedTracks.has(track.id);
-            return (
-              <button
-                key={idx}
-                onClick={() => toggleMark(track.id)}
-                className={`
-                  relative overflow-hidden aspect-square rounded-xl p-2 flex flex-col justify-center items-center text-center transition-all transform active:scale-95 shadow-sm
-                  ${isMarked 
-                    ? 'bg-gradient-to-br from-green-500 to-emerald-700 border-2 border-green-300 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]' 
-                    : 'bg-slate-800 border-2 border-slate-600 text-slate-300 hover:border-slate-500'
-                  }
-                `}
-              >
-                <span className={`font-bold text-xs sm:text-sm leading-tight line-clamp-3 ${isMarked ? 'text-white' : 'text-cyan-100'}`}>
-                  {track.title}
-                </span>
-                
-                {isMarked && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
-                    <span className="text-6xl">🎵</span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+        <div className="text-right">
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cartón</p>
+          <p className="font-black text-pink-500 text-lg">{cardId}</p>
         </div>
-
-        {/* Progress */}
-        <div className="bg-slate-800 rounded-2xl p-4 text-center border border-slate-700 shadow-xl mb-4">
-          <p className="text-slate-400 text-sm mb-2">Progreso del Cartón</p>
-          <div className="w-full bg-slate-900 rounded-full h-4 overflow-hidden border border-slate-700">
-            <div 
-              className="bg-gradient-to-r from-pink-500 to-cyan-400 h-4 transition-all duration-500" 
-              style={{ width: `${(markedTracks.size / gridSize) * 100}%` }}
-            ></div>
-          </div>
-          <p className="mt-2 font-bold text-cyan-400">
-            {markedTracks.size} / {gridSize}
-          </p>
-          
-          {markedTracks.size === gridSize && (
-            <div className="mt-4 bg-green-500 text-white font-black py-2 px-4 rounded-lg animate-pulse text-xl">
-              ¡CANTÁ BINGO! 🎉
-            </div>
-          )}
-        </div>
-        
-        <p className="text-xs text-center text-slate-500">
-          Toca cada recuadro cuando el DJ pase la canción correspondiente.
-        </p>
-
       </div>
+
+      <div className={`grid ${colsClass} gap-2 sm:gap-3`}>
+        {card.tracks.map((track, idx) => {
+          const isMarked = markedTracks.has(idx);
+          return (
+            <motion.div 
+              key={idx}
+              initial={false}
+              animate={{ 
+                scale: isMarked ? [1, 1.05, 1] : 1,
+                backgroundColor: isMarked ? 'rgb(236, 72, 153)' : 'var(--cell-bg)' 
+              }}
+              transition={{ duration: 0.3 }}
+              className={`aspect-square p-1.5 sm:p-2 rounded-2xl flex flex-col items-center justify-center text-center transition-shadow border-2 ${
+                isMarked 
+                  ? 'border-pink-400 text-white shadow-[0_0_15px_rgba(236,72,153,0.5)]' 
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm'
+              }`}
+              style={{ '--cell-bg': isMarked ? '#ec4899' : 'transparent' }}
+            >
+              <span className={`font-black text-[10px] sm:text-xs leading-tight line-clamp-3 ${isMarked ? 'drop-shadow-md' : ''}`}>
+                {track.title}
+              </span>
+              <span className={`text-[8px] sm:text-[10px] mt-1 font-semibold truncate w-full ${isMarked ? 'opacity-90' : 'text-slate-500 dark:text-slate-400'}`}>
+                {track.artist}
+              </span>
+              {isMarked && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute inset-0 border-4 border-white/30 rounded-2xl pointer-events-none" 
+                />
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl font-black text-lg border-2 border-slate-700 z-50 flex items-center gap-3 whitespace-nowrap"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

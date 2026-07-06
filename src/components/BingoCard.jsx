@@ -1,5 +1,6 @@
 import { themes, applyEcoInk } from '../utils/themes';
 import { QRCodeCanvas } from 'qrcode.react';
+import { motion } from 'framer-motion';
 
 export default function BingoCard({ card, gridSize, themeId, ecoInk, gameId }) {
   const is4x4 = gridSize === 16;
@@ -12,7 +13,13 @@ export default function BingoCard({ card, gridSize, themeId, ecoInk, gameId }) {
   }
 
   return (
-    <div className={`bingo-card break-inside-avoid print:break-inside-avoid mb-8 print:mb-4 w-full max-w-sm mx-auto ${activeTheme.container}`}>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+      className={`bingo-card break-inside-avoid print:break-inside-avoid mb-8 print:mb-4 w-full max-w-sm mx-auto shadow-lg hover:shadow-2xl transition-shadow ${activeTheme.container}`}
+    >
       <div className={`text-center ${activeTheme.header}`}>
         Bingo Musical
         <div className="text-xs font-normal opacity-80 mt-1">
@@ -47,6 +54,6 @@ export default function BingoCard({ card, gridSize, themeId, ecoInk, gameId }) {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
