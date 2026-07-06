@@ -133,7 +133,7 @@ export default function HostApp() {
         </div>
 
         {/* CONTENT AREA WITH ANIMATIONS */}
-        <div className="mt-16">
+        <div className="mt-28 sm:mt-32 relative z-10">
           <AnimatePresence mode="wait">
             
             {/* STEP 1: PLAYLIST INPUT */}

@@ -95,6 +95,19 @@ export default function MobilePlayer() {
     }
   };
 
+  const toggleTrack = (idx) => {
+    setMarkedTracks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(idx)) {
+        newSet.delete(idx);
+      } else {
+        newSet.add(idx);
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
+      return newSet;
+    });
+  };
+
   useEffect(() => {
     if (!card || markedTracks.size === 0) return;
 
@@ -115,11 +128,10 @@ export default function MobilePlayer() {
       confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
       if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
       
-      socketRef.current.emit('winner', {
+      socketRef.current.emit('full-bingo', {
         gameId,
         cardId,
-        playerName,
-        type: 'BINGO'
+        playerName
       });
       return; 
     }
@@ -146,11 +158,10 @@ export default function MobilePlayer() {
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       
       const lineType = getLineType(Array.from(currentWonLines)[currentWonLines.size - 1], size);
-      socketRef.current.emit('winner', {
+      socketRef.current.emit('line-bingo', {
         gameId,
         cardId,
         playerName,
-        type: 'LINE',
         lineType
       });
     }
@@ -248,12 +259,13 @@ export default function MobilePlayer() {
                 backgroundColor: isMarked ? 'rgb(236, 72, 153)' : 'var(--cell-bg)' 
               }}
               transition={{ duration: 0.3 }}
-              className={`aspect-square p-1.5 sm:p-2 rounded-2xl flex flex-col items-center justify-center text-center transition-shadow border-2 ${
+              className={`aspect-square p-1.5 sm:p-2 rounded-2xl flex flex-col items-center justify-center text-center transition-shadow border-2 cursor-pointer ${
                 isMarked 
                   ? 'border-pink-400 text-white shadow-[0_0_15px_rgba(236,72,153,0.5)]' 
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm hover:shadow-md'
               }`}
               style={{ '--cell-bg': isMarked ? '#ec4899' : 'transparent' }}
+              onClick={() => toggleTrack(idx)}
             >
               <span className={`font-black text-[10px] sm:text-xs leading-tight line-clamp-3 ${isMarked ? 'drop-shadow-md' : ''}`}>
                 {track.title}

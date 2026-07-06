@@ -164,13 +164,13 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
                   placeholder="Ej: CARTON-015"
                   value={auditInput}
                   onChange={(e) => setAuditInput(e.target.value)}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-pink-500 text-sm font-bold shadow-inner uppercase"
+                  className="flex-1 min-w-0 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-pink-500 text-sm font-bold shadow-inner uppercase"
                 />
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit" 
-                  className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md"
+                  className="shrink-0 bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white px-4 sm:px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md"
                 >
                   Buscar
                 </motion.button>
