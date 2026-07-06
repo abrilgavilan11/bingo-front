@@ -13,7 +13,11 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
   const [auditedCard, setAuditedCard] = useState(null);
 
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001');
+    let apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    if (apiUrl && !apiUrl.startsWith('http')) {
+      apiUrl = 'https://' + apiUrl;
+    }
+    const socket = io(apiUrl);
     socketRef.current = socket;
 
     socket.on('connect', () => {
