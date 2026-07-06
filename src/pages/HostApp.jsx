@@ -89,10 +89,10 @@ export default function HostApp() {
 
   return (
     <div className="p-4 sm:p-8 text-slate-800 dark:text-white">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto">
         
         {/* STEPPER COMPONENT */}
-        <div className="no-print mb-8">
+        <div className="no-print mb-4 pb-12 sm:pb-16 relative">
           <div className="flex items-center justify-between relative">
             {/* Background Line */}
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full z-0"></div>
@@ -133,7 +133,7 @@ export default function HostApp() {
         </div>
 
         {/* CONTENT AREA WITH ANIMATIONS */}
-        <div className="mt-28 sm:mt-32 relative z-10">
+        <div className="mt-8 relative z-10">
           <AnimatePresence mode="wait">
             
             {/* STEP 1: PLAYLIST INPUT */}
