@@ -121,12 +121,6 @@ export default function MobilePlayer() {
       showToast('¡BINGO! 🎉');
       confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
       if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
-      
-      socketRef.current.emit('full-bingo', {
-        gameId,
-        cardId,
-        playerName
-      });
       return; 
     }
 
@@ -150,14 +144,6 @@ export default function MobilePlayer() {
       showToast('¡LÍNEA! 🚀');
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      
-      const lineType = getLineType(Array.from(currentWonLines)[currentWonLines.size - 1], size);
-      socketRef.current.emit('line-bingo', {
-        gameId,
-        cardId,
-        playerName,
-        lineType
-      });
     }
   }, [markedTracks, card, hasBingo, wonLines, gameId, cardId, playerName]);
 
