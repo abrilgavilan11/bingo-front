@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateUniqueCards } from '../utils/bingo';
 
-export default function HostPanel({ allTracks, cards, gameId, onExit }) {
+export default function HostPanel({ allTracks, cards: initialCards, gameId, onExit }) {
+  const [cards, setCards] = useState(initialCards);
   const [availableTracks, setAvailableTracks] = useState([...allTracks]);
   const [playedTracks, setPlayedTracks] = useState([]);
   const [winners, setWinners] = useState([]);
@@ -68,12 +70,33 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
   };
 
   const restartGame = () => {
-    if (window.confirm('¿Seguro que quieres reiniciar la partida actual? Los cartones seguirán siendo los mismos, pero todo el progreso se borrará.')) {
+    if (window.confirm('¿Seguro que quieres reiniciar la partida actual? Se generarán cartones nuevos para los jugadores y todo el progreso se borrará.')) {
       setPlayedTracks([]);
       setWinners([]);
       setAvailableTracks([...allTracks]);
+      setAuditedCard(null);
+      setAuditInput('');
+
+      let newCards = null;
+      if (cards && cards.length > 0 && allTracks && allTracks.length > 0) {
+        try {
+          const gridSize = cards[0].tracks.length;
+          const result = generateUniqueCards({
+            tracks: allTracks,
+            gridSize: gridSize,
+            numberOfCards: cards.length
+          });
+          newCards = result.cards;
+        } catch (e) {
+          console.error("Error regenerando cartones:", e);
+        }
+      }
+
       if (socketRef.current) {
-        socketRef.current.emit('restart-game', gameId);
+        socketRef.current.emit('restart-game', { gameId, newCards });
+        if (newCards) {
+          setCards(newCards);
+        }
       }
     }
   };

@@ -79,11 +79,10 @@ export default function MobilePlayer() {
     });
 
     socket.on('restarted-game', () => {
-      setMarkedTracks(new Set());
-      setWonLines(new Set());
-      setHasBingo(false);
-      setToastMessage('¡La partida se ha reiniciado! Empezamos de cero.');
-      if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
+      showToast('¡Nueva partida comenzada! Actualizando cartón...');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     });
 
     return () => socket.disconnect();
