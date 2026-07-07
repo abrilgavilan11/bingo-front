@@ -298,7 +298,7 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            key={idx} 
+                            key={`line-${winner.cardId}-${idx}`} 
                             className="p-4 mb-2 rounded-2xl border-2 bg-slate-50 dark:bg-slate-900 border-cyan-300 dark:border-cyan-500/50 relative shadow-sm"
                           >
                             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black mb-1 bg-cyan-400 text-cyan-950 shadow-sm">
@@ -320,7 +320,7 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            key={idx} 
+                            key={`bingo-${winner.cardId}-${idx}`} 
                             className="p-5 rounded-2xl border-2 bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/40 dark:to-yellow-600/20 border-yellow-400 dark:border-yellow-500 relative shadow-md"
                           >
                             <div className="flex justify-between items-start">
