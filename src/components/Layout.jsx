@@ -33,11 +33,11 @@ export default function Layout({ children }) {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300 font-sans flex flex-col">
       <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 no-print transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
-          <div className="flex items-center h-12 sm:h-16">
+          <div className="flex items-center py-1">
             <img 
               src={logo} 
               alt="Bingo Musical" 
-              className="h-32 sm:h-48 w-auto object-contain scale-110 sm:scale-125" 
+              className="h-16 sm:h-24 w-auto object-contain hover:scale-105 transition-transform duration-300" 
             />
           </div>
           
