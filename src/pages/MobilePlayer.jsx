@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCard } from '../services/api';
+import { themes, applyEcoInk } from '../utils/themes';
 
 const WINNING_LINES = {
   9: [
@@ -20,6 +21,16 @@ const WINNING_LINES = {
 
 export default function MobilePlayer() {
   const { gameId, cardId } = useParams();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const themeParam = queryParams.get('theme') || 'minimal';
+  const ecoParam = queryParams.get('eco') === '1';
+
+  let activeTheme = themes[themeParam] || themes['minimal'];
+  if (ecoParam) {
+    activeTheme = applyEcoInk(activeTheme);
+  }
+
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -67,37 +78,16 @@ export default function MobilePlayer() {
       socket.emit('join-room', gameId);
     });
 
-    socket.on('sync-state', (state) => {
-      if (state.playedTracks && state.playedTracks.length > 0) {
-        const lastTrack = state.playedTracks[0];
-        checkTrackMatch(lastTrack, true);
-      }
-    });
-
-    socket.on('next-song', (track) => {
-      checkTrackMatch(track, false);
+    socket.on('restarted-game', () => {
+      setMarkedTracks(new Set());
+      setWonLines(new Set());
+      setHasBingo(false);
+      setToastMessage('¡La partida se ha reiniciado! Empezamos de cero.');
+      if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
     });
 
     return () => socket.disconnect();
   }, [gameId, cardId, playerName, card]);
-
-  const checkTrackMatch = (track, isSync) => {
-    if (!card) return;
-    
-    const trackIndex = card.tracks.findIndex(t => t.id === track.id);
-    if (trackIndex !== -1) {
-      setMarkedTracks(prev => {
-        const newSet = new Set(prev);
-        newSet.add(trackIndex);
-        return newSet;
-      });
-      
-      if (!isSync) {
-        showToast(`¡Tenes "${track.title}"! 🔥`);
-        if (navigator.vibrate) navigator.vibrate(200);
-      }
-    }
-  };
 
   const toggleTrack = (idx) => {
     setMarkedTracks(prev => {
@@ -239,55 +229,58 @@ export default function MobilePlayer() {
   const colsClass = is4x4 ? 'grid-cols-4' : 'grid-cols-3';
 
   return (
-    <div className="max-w-md mx-auto p-4 sm:p-6 pb-20 text-slate-800 dark:text-white">
-      <div className="mb-6 flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div>
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jugador</p>
-          <p className="font-black text-slate-900 dark:text-white text-lg">{playerName}</p>
+    <div className="min-h-screen p-4 sm:p-6 pb-20 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 transition-colors">
+      <motion.div 
+        className={`w-full max-w-sm mx-auto shadow-2xl overflow-hidden rounded-3xl ${activeTheme.container}`}
+      >
+        <div className={`p-4 flex justify-between items-center ${activeTheme.header}`}>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">Jugador</p>
+            <p className="font-black text-lg leading-tight">{playerName}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">Cartón</p>
+            <p className="font-black text-lg leading-tight">{cardId}</p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cartón</p>
-          <p className="font-black text-pink-500 text-lg">{cardId}</p>
-        </div>
-      </div>
 
-      <div className={`grid ${colsClass} gap-2 sm:gap-3`}>
-        {card.tracks.map((track, idx) => {
-          const isMarked = markedTracks.has(idx);
-          return (
-            <motion.div 
-              key={idx}
-              initial={false}
-              animate={{ 
-                scale: isMarked ? [1, 1.05, 1] : 1,
-                backgroundColor: isMarked ? 'rgb(236, 72, 153)' : 'var(--cell-bg)' 
-              }}
-              transition={{ duration: 0.3 }}
-              className={`aspect-square p-1.5 sm:p-2 rounded-2xl flex flex-col items-center justify-center text-center transition-shadow border-2 cursor-pointer ${
-                isMarked 
-                  ? 'border-pink-400 text-white shadow-[0_0_15px_rgba(236,72,153,0.5)]' 
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm hover:shadow-md'
-              }`}
-              style={{ '--cell-bg': isMarked ? '#ec4899' : 'transparent' }}
-              onClick={() => toggleTrack(idx)}
-            >
-              <span className={`font-black text-[10px] sm:text-xs leading-tight line-clamp-3 ${isMarked ? 'drop-shadow-md' : ''}`}>
-                {track.title}
-              </span>
-              <span className={`text-[8px] sm:text-[10px] mt-1 font-semibold truncate w-full ${isMarked ? 'opacity-90' : 'text-slate-500 dark:text-slate-400'}`}>
-                {track.artist}
-              </span>
-              {isMarked && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute inset-0 border-4 border-white/30 rounded-2xl pointer-events-none" 
-                />
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
+        <div className={`grid ${colsClass} ${activeTheme.grid}`}>
+          {card.tracks.map((track, idx) => {
+            const isMarked = markedTracks.has(idx);
+            return (
+              <motion.div 
+                key={idx}
+                initial={false}
+                animate={{ 
+                  scale: isMarked ? [1, 1.05, 1] : 1,
+                  opacity: isMarked ? 0.75 : 1
+                }}
+                transition={{ duration: 0.3 }}
+                className={`relative cursor-pointer transition-all ${activeTheme.cell} ${isMarked ? 'brightness-90 saturate-50' : ''}`}
+                onClick={() => toggleTrack(idx)}
+              >
+                <div className="line-clamp-3 relative z-10">
+                  <span className={`block ${activeTheme.title} ${isMarked ? 'line-through decoration-2' : ''}`}>
+                    {track.title}
+                  </span>
+                  <span className={`block ${activeTheme.artist}`}>
+                    {track.artist}
+                  </span>
+                </div>
+                {isMarked && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-40" 
+                  >
+                    <span className="text-5xl filter drop-shadow-md">🎵</span>
+                  </motion.div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
 
       <AnimatePresence>
         {toastMessage && (

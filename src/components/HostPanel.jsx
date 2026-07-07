@@ -67,6 +67,17 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
     }
   };
 
+  const restartGame = () => {
+    if (window.confirm('¿Seguro que quieres reiniciar la partida actual? Los cartones seguirán siendo los mismos, pero todo el progreso se borrará.')) {
+      setPlayedTracks([]);
+      setWinners([]);
+      setAvailableTracks([...allTracks]);
+      if (socketRef.current) {
+        socketRef.current.emit('restart-game', gameId);
+      }
+    }
+  };
+
   const handleAudit = (e) => {
     e.preventDefault();
     const query = auditInput.trim().toUpperCase();
@@ -87,19 +98,28 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
               SALA: <span className="text-cyan-600 dark:text-cyan-400">{gameId}</span>
             </span>
           </h1>
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onExit}
-            className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-white transition-colors shadow-sm"
-          >
-            Cerrar Panel
-          </motion.button>
+          <div className="flex gap-2">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={restartGame}
+              className="bg-yellow-500 hover:bg-yellow-600 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-colors shadow-sm"
+            >
+              Volver a jugar
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onExit}
+              className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-white transition-colors shadow-sm"
+            >
+              Cerrar Panel
+            </motion.button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
           
-          {/* COLUMNA IZQ: BOLILLERO Y REPRODUCTOR */}
           <div className="xl:col-span-4 space-y-8">
             <div className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
@@ -124,7 +144,6 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
                 Quedan <strong className="text-slate-800 dark:text-white text-lg">{availableTracks.length}</strong> temas
               </div>
 
-              {/* REPRODUCTOR INTEGRADO */}
               <AnimatePresence>
                 {currentTrack && (
                   <motion.div 
@@ -157,7 +176,6 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
               </AnimatePresence>
             </div>
 
-            {/* AUDITOR */}
             <div className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl">
               <h2 className="text-xl font-black mb-4 text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 🕵️‍♂️ Verificar Cartón
@@ -208,7 +226,6 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
             </div>
           </div>
 
-          {/* COLUMNA CENTRAL: HISTORIAL */}
           <div className="xl:col-span-4">
             <div className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl h-full flex flex-col relative overflow-hidden">
               <h2 className="text-2xl font-black mb-6 text-slate-800 dark:text-white flex justify-between items-center">
@@ -257,10 +274,8 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
             </div>
           </div>
 
-          {/* COLUMNA DER: PODIO DE GANADORES */}
           <div className="xl:col-span-4">
             <div className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl h-full flex flex-col relative overflow-hidden">
-              {/* Decoration */}
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-400/20 dark:bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
               
               <h2 className="text-2xl font-black mb-6 text-yellow-600 dark:text-yellow-400 flex items-center gap-3">
@@ -274,27 +289,54 @@ export default function HostPanel({ allTracks, cards, gameId, onExit }) {
                   </div>
                 ) : (
                   <AnimatePresence>
-                    {winners.map((winner, idx) => (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        key={idx} 
-                        className={`p-5 rounded-2xl border-2 relative shadow-md ${winner.type === 'BINGO' ? 'bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/40 dark:to-yellow-600/20 border-yellow-400 dark:border-yellow-500' : 'bg-slate-50 dark:bg-slate-900 border-cyan-300 dark:border-cyan-500/50'}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black mb-3 tracking-widest uppercase shadow-sm ${winner.type === 'BINGO' ? 'bg-yellow-400 text-yellow-950' : 'bg-cyan-400 text-cyan-950'}`}>
-                              {winner.type === 'BINGO' ? 'CARTÓN LLENO 👑' : `LÍNEA 🥈 (${winner.lineType})`}
+                    <div className="mb-4">
+                      <h3 className="text-sm font-bold text-cyan-600 dark:text-cyan-400 mb-2 uppercase tracking-wider">Ganadores de Línea</h3>
+                      {winners.filter(w => w.type === 'LÍNEA').length === 0 ? (
+                        <p className="text-slate-400 text-xs italic">Aún no hay ganadores de línea.</p>
+                      ) : (
+                        winners.filter(w => w.type === 'LÍNEA').map((winner, idx) => (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            key={idx} 
+                            className="p-4 mb-2 rounded-2xl border-2 bg-slate-50 dark:bg-slate-900 border-cyan-300 dark:border-cyan-500/50 relative shadow-sm"
+                          >
+                            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black mb-1 bg-cyan-400 text-cyan-950 shadow-sm">
+                              {idx === 0 ? '1º LÍNEA' : '2º LÍNEA'} ({winner.lineType})
                             </span>
-                            <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1.5 font-bold">Cartón: {winner.cardId}</p>
-                          </div>
-                          {winner.type === 'BINGO' && (
-                            <div className="text-5xl filter drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-bounce">🏆</div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
+                            <h3 className="font-black text-slate-900 dark:text-white text-lg leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold">Cartón: {winner.cardId}</p>
+                          </motion.div>
+                        ))
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-yellow-600 dark:text-yellow-400 mb-2 uppercase tracking-wider">Ganador Bingo</h3>
+                      {winners.filter(w => w.type === 'BINGO').length === 0 ? (
+                        <p className="text-slate-400 text-xs italic">Aún no hay ganador de bingo completo.</p>
+                      ) : (
+                        winners.filter(w => w.type === 'BINGO').map((winner, idx) => (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            key={idx} 
+                            className="p-5 rounded-2xl border-2 bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/40 dark:to-yellow-600/20 border-yellow-400 dark:border-yellow-500 relative shadow-md"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-black mb-3 tracking-widest uppercase shadow-sm bg-yellow-400 text-yellow-950">
+                                  CARTÓN LLENO 👑
+                                </span>
+                                <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1.5 font-bold">Cartón: {winner.cardId}</p>
+                              </div>
+                              <div className="text-5xl filter drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-bounce">🏆</div>
+                            </div>
+                          </motion.div>
+                        ))
+                      )}
+                    </div>
                   </AnimatePresence>
                 )}
               </div>
