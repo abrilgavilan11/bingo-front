@@ -39,10 +39,10 @@ Personalizá la estética de tus cartones en la pantalla de impresión con nuest
 
 | Tema | Estilo Visual | Vibe / Ideal para... |
 | :--- | :--- | :--- |
-| **🕹️ Synthwave Neón** | Fondos oscuros, bordes brillantes rosa y cian, fuentes retro arcade. | Fiestas pop de los 80s/90s. |
+| **🕹️ Synthwave Neón** | Estilo "Miami Vice": negro puro, bordes fucsia intenso, detalles en cian y amarillo eléctrico. | Fiestas pop de los 80s/90s. |
 | **🌴 Fiesta Tropical** | Tonos cálidos y vibrantes, bordes redondeados y estilo veraniego. | Cumpleaños al aire libre o pool parties. |
-| **✨ Aesthetic Limpio** | Fondo blanco impecable, líneas finas y tipografía Serif elegante. | Eventos formales o máximo ahorro de tinta. |
-| **🎟️ Ticket de Festival** | Simula la entrada o credencial de backstage de un recital con código de barras. | Fanáticos del rock, indie o temáticas de conciertos. |
+| **🌌 Galaxia Mágica** | Fondo índigo profundo, textos neón fucsia y cian brillante, aspecto estelar. | Fiestas de noche, temáticas espaciales. |
+| **🎨 Pop Art Cómico** | Amarillo brillante, bordes negros gruesos y detalles en cian/magenta. Estilo cómic. | Previa con amigos, temáticas divertidas y coloridas. |
 | **🖨️ Modo Eco-Ink** | Elimina todos los fondos oscuros e invierte los colores al imprimir. | Ahorro extremo de tinta en impresoras de casa. |
 
 ---
