@@ -175,11 +175,13 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
                 Quedan <strong className="text-slate-800 dark:text-white text-lg">{availableTracks.length}</strong> temas
               </div>
 
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {currentTrack && (
                   <motion.div 
+                    key={currentTrack.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
                     className="mt-8 bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 text-left shadow-inner"
                   >
                     <h3 className="text-cyan-600 dark:text-cyan-400 font-bold text-xs uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -229,15 +231,15 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
                 </motion.button>
               </form>
 
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {auditedCard === 'NOT_FOUND' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 p-3 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-500/50 text-red-600 dark:text-red-200 rounded-xl text-sm text-center font-bold">
+                  <motion.div key="not-found" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-4 p-3 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-500/50 text-red-600 dark:text-red-200 rounded-xl text-sm text-center font-bold">
                     No encontrado.
                   </motion.div>
                 )}
 
                 {auditedCard && auditedCard !== 'NOT_FOUND' && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700 overflow-hidden">
+                  <motion.div key="found-card" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-black text-sm text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/30 px-3 py-1 rounded-md">{auditedCard.id}</span>
                     </div>
@@ -319,56 +321,62 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
                     Esperando a los primeros ganadores...
                   </div>
                 ) : (
-                  <AnimatePresence>
+                  <>
                     <div className="mb-4">
                       <h3 className="text-sm font-bold text-cyan-600 dark:text-cyan-400 mb-2 uppercase tracking-wider">Ganadores de Línea</h3>
-                      {winners.filter(w => w.type === 'LÍNEA').length === 0 ? (
-                        <p className="text-slate-400 text-xs italic">Aún no hay ganadores de línea.</p>
-                      ) : (
-                        winners.filter(w => w.type === 'LÍNEA').map((winner, idx) => (
-                          <motion.div 
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            key={`line-${winner.cardId}-${idx}`} 
-                            className="p-4 mb-2 rounded-2xl border-2 bg-slate-50 dark:bg-slate-900 border-cyan-300 dark:border-cyan-500/50 relative shadow-sm"
-                          >
-                            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black mb-1 bg-cyan-400 text-cyan-950 shadow-sm">
-                              {idx === 0 ? '1º LÍNEA' : '2º LÍNEA'} ({winner.lineType})
-                            </span>
-                            <h3 className="font-black text-slate-900 dark:text-white text-lg leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold">Cartón: {winner.cardId}</p>
-                          </motion.div>
-                        ))
-                      )}
+                      <AnimatePresence>
+                        {winners.filter(w => w.type === 'LÍNEA').length === 0 ? (
+                          <motion.p key="no-line-winners" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-slate-400 text-xs italic">Aún no hay ganadores de línea.</motion.p>
+                        ) : (
+                          winners.filter(w => w.type === 'LÍNEA').map((winner, idx) => (
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              key={`line-${winner.cardId}-${idx}`} 
+                              className="p-4 mb-2 rounded-2xl border-2 bg-slate-50 dark:bg-slate-900 border-cyan-300 dark:border-cyan-500/50 relative shadow-sm"
+                            >
+                              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black mb-1 bg-cyan-400 text-cyan-950 shadow-sm">
+                                {idx === 0 ? '1º LÍNEA' : '2º LÍNEA'} ({winner.lineType})
+                              </span>
+                              <h3 className="font-black text-slate-900 dark:text-white text-lg leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
+                              <p className="text-slate-500 dark:text-slate-400 text-xs font-bold">Cartón: {winner.cardId}</p>
+                            </motion.div>
+                          ))
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     <div>
                       <h3 className="text-sm font-bold text-yellow-600 dark:text-yellow-400 mb-2 uppercase tracking-wider">Ganador Bingo</h3>
-                      {winners.filter(w => w.type === 'BINGO').length === 0 ? (
-                        <p className="text-slate-400 text-xs italic">Aún no hay ganador de bingo completo.</p>
-                      ) : (
-                        winners.filter(w => w.type === 'BINGO').map((winner, idx) => (
-                          <motion.div 
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            key={`bingo-${winner.cardId}-${idx}`} 
-                            className="p-5 rounded-2xl border-2 bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/40 dark:to-yellow-600/20 border-yellow-400 dark:border-yellow-500 relative shadow-md"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-black mb-3 tracking-widest uppercase shadow-sm bg-yellow-400 text-yellow-950">
-                                  CARTÓN LLENO 👑
-                                </span>
-                                <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1.5 font-bold">Cartón: {winner.cardId}</p>
+                      <AnimatePresence>
+                        {winners.filter(w => w.type === 'BINGO').length === 0 ? (
+                          <motion.p key="no-bingo-winners" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-slate-400 text-xs italic">Aún no hay ganador de bingo completo.</motion.p>
+                        ) : (
+                          winners.filter(w => w.type === 'BINGO').map((winner, idx) => (
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              key={`bingo-${winner.cardId}-${idx}`} 
+                              className="p-5 rounded-2xl border-2 bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/40 dark:to-yellow-600/20 border-yellow-400 dark:border-yellow-500 relative shadow-md"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-black mb-3 tracking-widest uppercase shadow-sm bg-yellow-400 text-yellow-950">
+                                    CARTÓN LLENO 👑
+                                  </span>
+                                  <h3 className="font-black text-slate-900 dark:text-white text-xl leading-tight">{winner.playerName || 'Jugador Anónimo'}</h3>
+                                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-1.5 font-bold">Cartón: {winner.cardId}</p>
+                                </div>
+                                <div className="text-5xl filter drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-bounce">🏆</div>
                               </div>
-                              <div className="text-5xl filter drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-bounce">🏆</div>
-                            </div>
-                          </motion.div>
-                        ))
-                      )}
+                            </motion.div>
+                          ))
+                        )}
+                      </AnimatePresence>
                     </div>
-                  </AnimatePresence>
+                  </>
                 )}
               </div>
             </div>
