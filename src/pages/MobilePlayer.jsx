@@ -223,7 +223,7 @@ export default function MobilePlayer() {
   const colsClass = is4x4 ? 'grid-cols-4' : 'grid-cols-3';
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 pb-20 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 transition-colors">
+    <div className="flex-1 p-4 sm:p-6 pb-20 pt-8 sm:pt-12 flex flex-col items-center justify-start transition-colors">
       <motion.div 
         className={`w-full max-w-sm mx-auto shadow-2xl overflow-hidden rounded-3xl ${activeTheme.container}`}
       >
