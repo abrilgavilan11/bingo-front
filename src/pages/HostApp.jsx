@@ -147,7 +147,14 @@ export default function HostApp() {
                 transition={{ duration: 0.3 }}
                 className="bg-white dark:bg-slate-800 p-6 sm:p-10 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 max-w-2xl mx-auto"
               >
-                <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-cyan-400 text-center">Elegí tu Playlist de Spotify</h2>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-cyan-500">
+                    🎶 ¡Bienvenido al Bingo Musical! 🎶
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-300 font-medium text-lg leading-relaxed">
+                    Preparate para armar tu propia sala, repartir cartones y arrancar la fiesta. Sólo necesitás una playlist de Spotify para empezar la magia. ¡Que gane el que más cante!
+                  </p>
+                </div>
                 <form onSubmit={handleFetchPlaylist} className="space-y-6">
                   <div>
                     <label htmlFor="url" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
@@ -203,29 +210,29 @@ export default function HostApp() {
                   
                   <form onSubmit={handleGenerateCards} className="space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
+                      <div className="flex flex-col">
                         <label className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4 text-center sm:text-left">
                           Formato de Cuadrícula
                         </label>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-1">
                           <button
                             type="button"
                             onClick={() => setGridSize(9)}
-                            className={`flex-1 py-4 rounded-2xl border-2 font-bold transition-all ${gridSize === 9 ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500 text-cyan-600 dark:text-cyan-400 shadow-md' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-cyan-300'}`}
+                            className={`flex-1 flex flex-col items-center justify-center py-4 rounded-2xl border-2 font-bold transition-all ${gridSize === 9 ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500 text-cyan-600 dark:text-cyan-400 shadow-md' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-cyan-300'}`}
                           >
-                            3x3 <span className="block text-xs font-normal opacity-70 mt-1">(9 temas)</span>
+                            <span>3x3</span> <span className="block text-xs font-normal opacity-70 mt-1">(9 temas)</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setGridSize(16)}
-                            className={`flex-1 py-4 rounded-2xl border-2 font-bold transition-all ${gridSize === 16 ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-500 text-pink-600 dark:text-pink-400 shadow-md' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-pink-300'}`}
+                            className={`flex-1 flex flex-col items-center justify-center py-4 rounded-2xl border-2 font-bold transition-all ${gridSize === 16 ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-500 text-pink-600 dark:text-pink-400 shadow-md' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-pink-300'}`}
                           >
-                            4x4 <span className="block text-xs font-normal opacity-70 mt-1">(16 temas)</span>
+                            <span>4x4</span> <span className="block text-xs font-normal opacity-70 mt-1">(16 temas)</span>
                           </button>
                         </div>
                       </div>
 
-                      <div>
+                      <div className="flex flex-col">
                         <label htmlFor="numCards" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4 text-center sm:text-left">
                           Cantidad a Generar
                         </label>
@@ -236,7 +243,7 @@ export default function HostApp() {
                           max="1000"
                           value={numCards}
                           onChange={(e) => setNumCards(parseInt(e.target.value) || 1)}
-                          className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-4 text-slate-900 dark:text-white text-xl focus:outline-none focus:border-pink-500 transition-all text-center font-black shadow-inner"
+                          className="w-full flex-1 bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-4 text-slate-900 dark:text-white text-xl focus:outline-none focus:border-pink-500 transition-all text-center font-black shadow-inner"
                           required
                         />
                       </div>
