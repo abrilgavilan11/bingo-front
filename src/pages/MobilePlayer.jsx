@@ -71,7 +71,7 @@ export default function MobilePlayer() {
     if (apiUrl && !apiUrl.startsWith('http')) {
       apiUrl = 'https://' + apiUrl;
     }
-    const socket = io(apiUrl);
+    const socket = io(apiUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -120,6 +120,9 @@ export default function MobilePlayer() {
       showToast('¡BINGO! 🎉');
       confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
       if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+      if (socketRef.current) {
+        socketRef.current.emit('full-bingo', { gameId, cardId, playerName });
+      }
       return; 
     }
 
@@ -127,6 +130,7 @@ export default function MobilePlayer() {
 
     const currentWonLines = new Set(wonLines);
     let newWin = false;
+    let wonLineType = '';
 
     lines.forEach((line, index) => {
       if (!currentWonLines.has(index)) {
@@ -134,6 +138,7 @@ export default function MobilePlayer() {
         if (isLineComplete) {
           currentWonLines.add(index);
           newWin = true;
+          wonLineType = getLineType(index, size);
         }
       }
     });
@@ -143,6 +148,9 @@ export default function MobilePlayer() {
       showToast('¡LÍNEA! 🚀');
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (socketRef.current) {
+        socketRef.current.emit('line-bingo', { gameId, cardId, playerName, lineType: wonLineType });
+      }
     }
   }, [markedTracks, card, hasBingo, wonLines, gameId, cardId, playerName]);
 
