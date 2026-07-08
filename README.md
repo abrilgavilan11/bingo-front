@@ -27,8 +27,8 @@ Ofrece una experiencia híbrida: podés generar cartones optimizados para imprim
 * **🔗 Integración Mágica con Spotify:** Conexión directa mediante *Client Credentials Flow* para extraer títulos, artistas, carátulas y previews de audio de cualquier playlist en segundos.
 * **🎲 Motor Matemático Anti-Repetición:** Algoritmo *Fisher-Yates Shuffle* que garantiza cartones únicos y equilibrados para evitar ganadores simultáneos prematuros.
 * **⚡ Jugabilidad en Tiempo Real (Socket.io):** * **Bolillero Live:** Panel para el animador con sorteador de canciones e historial en vivo.
-  * **Alerta Express:** Los jugadores reciben un aviso visual en sus celulares (*"👀 ¡Está en tu cartón!"*) durante 5 segundos cada vez que sale una de sus canciones.
-  * **Podio en Vivo:** Sistema de validación automática para múltiples ganadores (hasta 3 premios por **Línea** y 1 ganador absoluto de **Cartón Lleno**).
+  * **Alerta Express:** Los jugadores reciben un aviso visual en sus celulares si hicieron línea o bingo durante 5 segundos con decoraciones festivas.
+  * **Podio en Vivo:** Sistema de validación automática para múltiples ganadores (hasta 2 premios por **Línea** y 1 ganador absoluto de **Cartón Lleno**).
 * **🎵 Reproductor Integrado (In-App Player):** Reproduce los audios de muestra o el tema completo mediante el *Spotify Embed Iframe* directamente desde el panel del animador sin salir de la app.
 * **📱 Cartones Digitales vía QR:** Los invitados pueden escanear un código para unirse a la sala interactiva y tachar casilleros desde su pantalla con feedback visual y celebraciones con confeti.
 * **🖨️ Smart Layout A4 & Modo Eco-Ink:** Vista previa de impresión formateada para 2 o 4 cartones por hoja con líneas de corte. Incluye un modo "Ahorro de Tinta" que elimina fondos oscuros al imprimir.
