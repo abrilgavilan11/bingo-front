@@ -265,14 +265,14 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
               ) : (
                 <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar max-h-[70vh]">
                   <AnimatePresence>
-                    {playedTracks.map((track, idx) => (
+                    {playedTracks.map((track, i) => (
                       <motion.div 
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        key={track.id} 
+                        key={`${track.id}-${i}`} 
                         className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
                       >
-                        {idx === 0 && (
+                        {i === 0 && (
                           <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-pink-500 to-cyan-500 shadow-[0_0_12px_#ec4899]"></div>
                         )}
                         {track.cover_url ? (
@@ -281,13 +281,13 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
                           <div className="w-14 h-14 rounded-xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xl">🎵</div>
                         )}
                         <div className="flex-1 min-w-0 py-1">
-                          <p className={`font-black text-sm sm:text-base truncate ${idx === 0 ? 'text-pink-600 dark:text-pink-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                          <p className={`font-black text-sm sm:text-base truncate ${i === 0 ? 'text-pink-600 dark:text-pink-400' : 'text-slate-800 dark:text-slate-200'}`}>
                             {track.title}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-semibold mt-0.5">{track.artist}</p>
                         </div>
                         <div className="text-3xl font-black text-slate-200 dark:text-white opacity-[0.15] dark:opacity-10 absolute -right-2 -bottom-2 group-hover:opacity-30 dark:group-hover:opacity-20 transition-opacity">
-                          #{playedTracks.length - idx}
+                          #{playedTracks.length - i}
                         </div>
                       </motion.div>
                     ))}
