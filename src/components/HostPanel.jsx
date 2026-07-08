@@ -19,7 +19,8 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
     if (apiUrl && !apiUrl.startsWith('http')) {
       apiUrl = 'https://' + apiUrl;
     }
-    const socket = io(apiUrl, { transports: ['websocket', 'polling'] });
+    const socketUrl = apiUrl.replace(/\/api\/?$/, '');
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {
