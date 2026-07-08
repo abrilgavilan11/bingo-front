@@ -36,6 +36,10 @@ export default function HostPanel({ allTracks, cards: initialCards, gameId, onEx
       }
     });
 
+    socket.on('debug-log', (msg) => {
+      console.log('📡 [BACKEND]:', msg);
+    });
+
     socket.on('winner-alert', (winner) => {
       setWinners(prev => {
         const existingIdx = prev.findIndex(w => w.cardId === winner.cardId && w.type === winner.type);
